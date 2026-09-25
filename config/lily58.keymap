@@ -14,10 +14,20 @@
 #define SYMBOLS  2
 #define ADJUST   3
 
+#define MO_TOG(layer) &mo_tog layer layer
+
 / {
-    /*
-     * Holding DCC and SYMBOLS simultaneously activates ADJUST.
-     */
+    behaviors {
+        mo_tog: behavior_mo_tog {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "hold-preferred";
+            tapping-term-ms = <200>;
+            bindings = <&mo>, <&tog>;
+        };
+    };
+
+    /* Holding DCC and SYMBOLS simultaneously activates ADJUST. */
     conditional_layers {
         compatible = "zmk,conditional-layers";
 
@@ -38,52 +48,39 @@
 &kp TAB   &kp Q  &kp W  &kp E    &kp R    &kp T                      &kp Y  &kp U    &kp I     &kp O   &kp P    &kp MINUS
 &kp LCTRL &kp A  &kp S  &kp D    &kp F    &kp G                      &kp H  &kp J    &kp K     &kp L   &kp SEMI &kp SQT
 &kp LSHFT &kp Z  &kp X  &kp C    &kp V    &kp B  &kp LBKT   &kp RBKT &kp N  &kp M    &kp COMMA &kp DOT &kp FSLH &kp RSHFT
-                        &kp LALT &kp LGUI &mo DCC &kp SPACE  &kp RET &mo SYMBOLS &kp BSPC &kp RGUI
+                        &kp LALT &kp LGUI MO_TOG(DCC) &kp SPACE       &kp RET &mo SYMBOLS &kp BSPC &kp RGUI
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
 
         /*
-         * Left thumb layer: one-handed DCC controls.
-         *
-         * Q W E   = keypad 7 8 9
-         * A S D   = keypad 4 5 6
-         * Z X C   = keypad 1 2 3
-         * V       = keypad 0
-         *
-         * R/T, F/G and B/[ supply keypad operations.
-         * Physical 1–5 supply F8–F12 for Maya component modes.
+         * Tap DCC to toggle this layer. Hold DCC while pressing another key
+         * to use it momentarily.
          */
         dcc_layer {
             display-name = "DCC";
 
             bindings = <
-&trans &kp F8    &kp F9    &kp F10   &kp F11       &kp F12                         &kp F1 &kp F2 &kp F3 &kp F4 &kp F5 &kp F6
-&trans &kp KP_N7 &kp KP_N8 &kp KP_N9 &kp KP_DIVIDE &kp KP_MULTIPLY                &trans &trans &trans &trans &trans &trans
-&trans &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_MINUS  &kp KP_PLUS                    &trans &trans &trans &trans &trans &trans
-&trans &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_N0     &kp KP_DOT &kp KP_ENTER &trans &trans &trans &trans &trans &trans &trans
-                             &trans   &trans         &trans       &trans      &trans &trans &trans &trans
+&kp KP_NUM &kp F8    &kp F9    &kp F10   &kp F11       &kp F12                            &kp F1       &kp F2        &kp F3        &kp F4    &kp F5       &kp F6
+&kp GRAVE  &kp KP_N7 &kp KP_N8 &kp KP_N9 &kp KP_DIVIDE &kp KP_MULTIPLY                    &kp LC(Z)    &kp LC(X)     &kp LC(C)     &kp LC(V) &kp LC(F)    &kp LC(S)
+&trans     &kp KP_N4 &kp KP_N5 &kp KP_N6 &kp KP_MINUS  &kp KP_PLUS                        &kp HOME     &kp LC(LEFT)  &kp LC(RIGHT) &kp END   &kp LC(BSPC) &kp LC(DEL)
+&kp LSHFT  &kp KP_N1 &kp KP_N2 &kp KP_N3 &kp KP_N0     &kp KP_DOT &kp KP_ENTER   &kp TAB   &kp LC(A)    &kp LC(FSLH) &kp LEFT      &kp DOWN  &kp UP       &kp RIGHT
+                                    &kp LCTRL &kp LALT &tog DCC &kp SPACE                   &kp RET      &mo SYMBOLS  &kp BSPC      &kp RGUI
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
 
         /*
-         * Right thumb layer: programming symbols and navigation.
-         *
-         * Home-row delimiter pairs:
-         *
-         *   =  <  {  [  (    )  ]  }  >  +
-         *
-         * SYMBOLS + Space     = underscore
-         * SYMBOLS + Backspace = Delete
+         * Programming symbols and navigation.
+         * SYMBOLS + Space is underscore; SYMBOLS + Backspace is Delete.
          */
         symbols_layer {
             display-name = "Symbols";
 
             bindings = <
-&trans &kp EXCL  &kp AT    &kp HASH  &kp DOLLAR &kp PRCNT                       &kp CARET &kp AMPS  &kp ASTRK &kp LPAR  &kp RPAR &kp TILDE
+&trans &kp EXCL  &kp AT    &kp HASH  &kp DOLLAR &kp PRCNT                       &kp CARET &kp AMPS  &kp ASTRK &kp LPAR  &kp RPAR &kp GRAVE
 &trans &trans    &trans    &trans    &trans     &trans                          &trans    &kp PG_DN &kp PG_UP &kp INS   &kp DEL  &trans
 &trans &kp EQUAL &kp LT    &kp LBRC  &kp LBKT   &kp LPAR                        &kp RPAR  &kp RBKT  &kp RBRC  &kp GT    &kp PLUS &trans
 &trans &kp MINUS &kp UNDER &kp FSLH  &kp BSLH   &kp PIPE &kp QMARK    &kp HOME  &kp LEFT  &kp DOWN  &kp UP    &kp RIGHT &kp END &trans
@@ -93,9 +90,7 @@
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
 
-        /*
-         * Hold both thumb layer keys to reach Bluetooth controls.
-         */
+        /* Hold both thumb layer keys to reach Bluetooth controls. */
         adjust_layer {
             display-name = "Adjust";
 
@@ -110,9 +105,7 @@
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
 
-        /*
-         * Preserve two dynamic slots for ZMK Studio.
-         */
+        /* Preserve two dynamic slots for ZMK Studio. */
         extra_2 {
             status = "reserved";
         };
